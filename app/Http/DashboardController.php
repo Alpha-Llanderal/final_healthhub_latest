@@ -72,43 +72,7 @@ class DashboardController extends Controller
         }
     }
 
-    /**
-     * Calculate profile completion percentage
-     *
-     * @param User $user
-     * @return int
-     */
-    protected function calculateProfileCompletion($user)
-    {
-        $completionFields = [
-            'first_name' => 10,
-            'last_name' => 10,
-            'email' => 15,
-            'birth_date' => 15,
-            'addresses' => 15,
-            'phoneNumbers' => 15,
-            'profile_picture' => 10,
-            'insurances' => 10
-        ];
-
-        $completionPercentage = 0;
-
-        foreach ($completionFields as $field => $weight) {
-            if ($field === 'addresses') {
-                $completionPercentage += $user->addresses->isNotEmpty() ? $weight : 0;
-            } elseif ($field === 'phoneNumbers') {
-                $completionPercentage += $user->phoneNumbers->isNotEmpty() ? $weight : 0;
-            } elseif ($field === 'insurances') {
-                $completionPercentage += $user->insurances->isNotEmpty() ? $weight : 0;
-            } else {
-                $completionPercentage += !empty($user->$field) ? $weight : 0;
-            }
-        }
-
-        return $completionPercentage;
-    }
-
-    /**
+   /**
      * Update user dashboard preferences
      *
      * @param Request $request
@@ -143,41 +107,6 @@ class DashboardController extends Controller
 
             return response()->json([
                 'message' => 'Unable to update preferences',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Quick access to recent medical information
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function quickMedicalInfo()
-    {
-        try {
-            $user = Auth::user();
-            $user->load([
-                'medicalRecords' => function($query) {
-                    $query->latest()->take(5);
-                },
-                'appointments' => function($query) {
-                    $query->upcoming()->take(3);
-                }
-            ]);
-
-            return response()->json([
-                'recent_records' => $user->medicalRecords,
-                'upcoming_appointments' => $user->appointments
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Quick medical info retrieval error', [
-                'user_id' => Auth::id(),
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'message' => 'Unable to retrieve medical information',
                 'error' => $e->getMessage()
             ], 500);
         }
