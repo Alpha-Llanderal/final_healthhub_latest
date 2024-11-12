@@ -1,0 +1,210 @@
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
+:root {
+    /* Color Variables */
+    --primary-color: #004a9f;
+    --text-color: #000;
+    --background-color: #fff;
+    --border-color: #ddd;
+    
+    /* Spacing Variables */
+    --header-footer-height: 70px;
+    --transition-speed: 0.3s;
+}
+
+/* Global Reset and Base Styles */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    line-height: 1.6;
+    color: var(--text-color);
+}
+
+/* Typography */
+.fw-bold {
+    font-weight: 700;
+}
+
+/* Layout */
+main {
+    flex: 1;
+    padding-top: var(--header-footer-height);
+    padding-bottom: var(--header-footer-height);
+}
+
+/* Header */
+header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--background-color);
+}
+
+/* Footer */
+.footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    z-index: 1000;
+    padding: 10px 15px;
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color var(--transition-speed) ease;
+}
+
+.footer a:hover {
+    color: darken(#004a9f, 10%);
+}
+
+.footer .contact-details i {
+    color: var(--primary-color);
+    margin-right: 5px;
+}
+
+/* Form and Input Styles */
+.min-vh-100 {
+    min-height: 100vh;
+}
+
+.form-floating > label {
+    z-index: 3;
+}
+
+/* Button Styles */
+.btn-success {
+    transition: all var(--transition-speed) ease;
+}
+
+.btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Accordion Styles */
+.accordion-button {
+    padding: 0.75rem 1.25rem;
+    transition: all var(--transition-speed) ease;
+}
+
+.accordion-body {
+    padding: 1.25rem;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 767px) {
+    .footer {
+        padding: 10px;
+    }
+
+    .footer .contact-details {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .footer .contact-details > div {
+        margin-bottom: 5px;
+    }
+
+    .footer .col-md-8, 
+    .footer .col-md-4 {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .alert {
+        margin-top: 90px;
+    }
+
+    .accordion-button {
+        padding: 0.5rem 1rem;
+    }
+
+    .accordion-body {
+        padding: 1rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .footer {
+        padding: 10px 50px;
+    }
+
+    .footer .contact-details {
+        justify-content: space-between;
+    }
+
+    .footer .col-md-4 {
+        text-align: right;
+    }
+
+    .alert {
+        margin-top: 90px;
+    }
+}
+
+/* Accessibility and Performance Enhancements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+    }
+}
+
+/* Print Styles */
+@media print {
+    body {
+        font-family: serif;
+    }
+
+    .footer, 
+    header {
+        display: none;
+    }
+
+    main {
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+}
+
+/* Optional advanced styling */
+.social-links a {
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.social-links a:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.social-links a i {
+    vertical-align: middle;
+}
+
+.hover-scale {
+    transition: transform 0.3s ease;
+}
+
+.hover-scale:hover {
+    transform: scale(1.2);
+}
+
