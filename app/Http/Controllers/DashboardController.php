@@ -16,7 +16,7 @@ class DashboardController extends Controller
      */
     public function __construct()
     {
-        $this->middleware(['auth', 'ensure.active']);
+        $this->middleware('auth');
     }
 
     /**

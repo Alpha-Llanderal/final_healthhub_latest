@@ -58,12 +58,6 @@ class User extends Authenticatable
         );
     }
 
-    // Scopes
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
     // Utility Methods
     public function hasCompletedProfile(): bool
     {
@@ -82,7 +76,6 @@ class User extends Authenticatable
     public static function createWithDefaults(array $attributes)
     {
         $defaults = [
-            'is_active' => true,
             'is_self_pay' => false
         ];
 

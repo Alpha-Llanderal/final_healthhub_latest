@@ -1,6 +1,6 @@
 <?php
 
 protected $routeMiddleware = [
-    'user.active' => \App\Http\Middleware\EnsureUserIsActive::class,
-    'ensure.active' => \App\Http\Middleware\EnsureUserIsActive::class,
+'password.check' => \App\Http\Middleware\CheckPasswordReset::class,
+'auth' => \App\Http\Middleware\Authenticate::class,
 ];

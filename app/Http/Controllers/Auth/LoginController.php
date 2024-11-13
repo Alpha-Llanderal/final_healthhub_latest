@@ -5,61 +5,70 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
-
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class LoginController extends Controller
 {
-    public function showLoginForm()
+    public function __construct()
     {
-        // If already logged in, redirect to dashboard
-        if (Auth::check()) {
-            return redirect()->route('dashboard');
-        }
-        return view('auth.login');
+        $this->middleware('guest')->except('logout');  // Add this constructor
     }
 
-    protected function authenticated(Request $request, $user)
-{
-    return redirect()->route('dashboard');
-}
+    public function showLoginForm()
+    {
+        // Remove the Auth::check() condition here - middleware will handle it
+        return view('auth.login');
+    }
 
     public function login(Request $request)
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
-            'password' => ['required', 'min:6'],
+            'password' => ['required', 'min:8'],
         ]);
 
-        // Attempt authentication
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            // Check user status
-            if (!Auth::user()->is_active) {
-                Auth::logout();
-                return redirect()->route('login')
-                    ->with('error', 'Your account has been deactivated. Please contact support.');
-            }
-
-            // Regenerate session
-            $request->session()->regenerate();
-
-            // Redirect to dashboard with updated route name
-            return redirect()->route('dashboard.index')
-                ->with('success', 'Welcome back, ' . Auth::user()->first_name . '!');
+        $user = User::where('email', $credentials['email'])->first();
+        
+        Log::info('Login attempt for email: ' . $credentials['email']);
+        
+        if (!$user) {
+            Log::info('Login failed: User not found');
+            return back()->withErrors([
+                'email' => 'No account found with this email address.',
+            ])->withInput($request->only('email', 'remember'));
         }
 
-        // If authentication fails
-        return back()->withErrors([
-            'email' => 'These credentials do not match our records.',
-        ])->withInput($request->only('email', 'remember'));
+        Log::info('User exists in database: Yes');
+        Log::info('Stored password hash: ' . $user->password);
+        
+        if (!Hash::check($credentials['password'], $user->password)) {
+            Log::info('Login failed: Invalid password');
+            return back()->withErrors([
+                'password' => 'The provided password is incorrect.',
+            ])->withInput($request->only('email', 'remember'));
+        }
+
+        // If we get here, both email and password are correct
+        Auth::login($user, $request->boolean('remember'));
+        Log::info('Login successful for user: ' . $user->email);
+        $request->session()->regenerate();
+
+        return redirect()->route('dashboard')
+            ->with('success', 'Welcome back, ' . $user->first_name . '!');
     }
 
     public function logout(Request $request)
     {
+        $email = Auth::user()->email ?? 'unknown';
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+        
+        Log::info('User logged out: ' . $email);
 
         return redirect()->route('login')
             ->with('success', 'You have been logged out successfully.');
