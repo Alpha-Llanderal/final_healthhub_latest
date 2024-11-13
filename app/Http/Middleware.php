@@ -41,16 +41,4 @@ class EnsureUserIsActive
 
         return $next($request);
     }
-
-    public function handle($request, Closure $next)
-    {
-        if (Auth::check() && !Auth::user()->is_active) {
-            Auth::logout();
-            return redirect()->route('login')
-                ->with('error', 'Your account has been deactivated.');
-        }
-
-        return $next($request);
-    }
-}
 }

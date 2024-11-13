@@ -2,42 +2,36 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
     /**
-     * Create a new controller instance with authentication middleware
+     * Create a new controller instance.
+     *
+     * @return void
      */
     public function __construct()
     {
-        // Ensure only authenticated users can access
-        $this->middleware(['auth', 'active']);
+        $this->middleware(['auth', 'ensure.active']);
     }
 
     /**
      * Show the application dashboard
      *
+     * @param Request $request
      * @return \Illuminate\Contracts\Support\Renderable
      */
     public function index(Request $request)
     {
         try {
-            // Fetch authenticated user with all relationships
+            // Fetch authenticated user with relevant relationships
             $user = User::with([
-                'addresses', 
-                'phoneNumbers', 
-                'appointments' => function($query) {
-                    // Optional: Filter or limit appointments
-                    $query->recent()->take(5);
-                },
-                'medicalRecords' => function($query) {
-                    // Optional: Sort medical records
-                    $query->latest()->take(3);
-                },
+                'addresses',
+                'phoneNumbers',
                 'insurances'
             ])->findOrFail(Auth::id());
 
@@ -48,20 +42,19 @@ class DashboardController extends Controller
                 'ip' => $request->ip()
             ]);
 
-            // Additional user profile completeness check
+            // Calculate profile completion
             $profileCompletion = $this->calculateProfileCompletion($user);
 
             // Prepare dashboard data
             $dashboardData = [
                 'user' => $user,
                 'profileCompletion' => $profileCompletion,
-                'upcomingAppointments' => $user->appointments->take(3),
-                'recentMedicalRecords' => $user->medicalRecords->take(2),
+                'recentActivity' => $this->getRecentActivity($user),
             ];
 
             return view('dashboard', $dashboardData);
+            
         } catch (\Exception $e) {
-            // Log error and redirect with message
             Log::error('Dashboard access error', [
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage()
@@ -72,7 +65,7 @@ class DashboardController extends Controller
         }
     }
 
-   /**
+    /**
      * Update user dashboard preferences
      *
      * @param Request $request
@@ -99,6 +92,7 @@ class DashboardController extends Controller
                 'message' => 'Dashboard preferences updated successfully',
                 'preferences' => $user->dashboard_preferences
             ]);
+
         } catch (\Exception $e) {
             Log::error('Dashboard preferences update error', [
                 'user_id' => Auth::id(),
@@ -110,5 +104,59 @@ class DashboardController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get recent user activity
+     *
+     * @param User $user
+     * @return array
+     */
+    protected function getRecentActivity(User $user)
+    {
+        // Implement your logic to fetch recent activity
+        // This is a placeholder - customize based on your needs
+        return [];
+    }
+
+    /**
+     * Calculate profile completion percentage
+     *
+     * @param User $user
+     * @return int
+     */
+    protected function calculateProfileCompletion(User $user)
+    {
+        $totalFields = 0;
+        $completedFields = 0;
+
+        // Basic Information
+        $basicFields = ['first_name', 'last_name', 'email', 'date_of_birth'];
+        foreach ($basicFields as $field) {
+            $totalFields++;
+            if (!empty($user->$field)) {
+                $completedFields++;
+            }
+        }
+
+        // Addresses
+        $totalFields++;
+        if ($user->addresses->isNotEmpty()) {
+            $completedFields++;
+        }
+
+        // Phone Numbers
+        $totalFields++;
+        if ($user->phoneNumbers->isNotEmpty()) {
+            $completedFields++;
+        }
+
+        // Insurance Information
+        $totalFields++;
+        if ($user->insurances->isNotEmpty()) {
+            $completedFields++;
+        }
+
+        return ($completedFields / $totalFields) * 100;
     }
 }

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Foundation\Auth\AuthenticatesUsers;
+
 
 class LoginController extends Controller
 {
@@ -18,13 +20,16 @@ class LoginController extends Controller
         return view('auth.login');
     }
 
+    protected function authenticated(Request $request, $user)
+{
+    return redirect()->route('dashboard');
+}
+
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email', 'exists:users,email'],
+            'email' => ['required', 'email'],
             'password' => ['required', 'min:6'],
-        ], [
-            'email.exists' => 'No account found with this email address.',
         ]);
 
         // Attempt authentication
@@ -32,22 +37,22 @@ class LoginController extends Controller
             // Check user status
             if (!Auth::user()->is_active) {
                 Auth::logout();
-                return redirect()->route(' login')
+                return redirect()->route('login')
                     ->with('error', 'Your account has been deactivated. Please contact support.');
             }
 
             // Regenerate session
             $request->session()->regenerate();
 
-            // Redirect to dashboard
-            return redirect()->route('dashboard')
+            // Redirect to dashboard with updated route name
+            return redirect()->route('dashboard.index')
                 ->with('success', 'Welcome back, ' . Auth::user()->first_name . '!');
         }
 
         // If authentication fails
-        throw ValidationException::withMessages([
-            'email' => [trans('auth.failed')],
-        ]);
+        return back()->withErrors([
+            'email' => 'These credentials do not match our records.',
+        ])->withInput($request->only('email', 'remember'));
     }
 
     public function logout(Request $request)

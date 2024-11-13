@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -9,9 +10,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 
 // Landing Page
-Route::get('/', function () {
-    return view('landing');
-})->name('landing');
+Route::get('/', function () {return view('landing');})->name('landing');
 
 // Privacy Policy
 Route::get('/privacy-policy', [PrivacyPolicyController::class, 'show'])->name('privacy_policy');
@@ -35,15 +34,21 @@ Route::middleware('guest')->group(function () {
     });
 });
 
-// Authenticated Routes
-Route::middleware('auth')->group(function () {
-    // Logout Route
-    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+// Authentication Routes
+Auth::routes();
+
+// Protected routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    // Dashboard Routes
-    Route::prefix('dashboard')->name('dashboard.')->group(function () {
-        Route::get('/', [DashboardController::class, 'index'])->name('index');
-        Route::post('/preferences', [DashboardController::class, 'updatePreferences'])->name('preferences');
-        Route::get('/medical-info', [DashboardController::class, 'quickMedicalInfo'])->name('medical-info');
+    // Profile routes
+    Route::prefix('profile')->group(function () {
+        Route::post('/update', [UserController::class, 'updateProfile']);
+        Route::get('/addresses', [UserController::class, 'getAddresses']);
+        Route::post('/address', [UserController::class, 'addAddress']);
+        Route::delete('/address/{id}', [UserController::class, 'deleteAddress']);
+        Route::post('/phone', [UserController::class, 'addPhone']);
+        Route::delete('/phone/{id}', [UserController::class, 'deletePhone']);
+        Route::post('/upload', [UserController::class, 'uploadProfilePicture'])->name('profile.upload');
     });
 });
