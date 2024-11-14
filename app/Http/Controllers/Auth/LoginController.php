@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 class LoginController extends Controller
 {
@@ -22,30 +24,40 @@ class LoginController extends Controller
      */
     public function login(Request $request)
     {
-        // Step 1: Validate the request data
+        // Step 1: Validate the input data
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required|min:8',
         ]);
-
-        // Step 2: Attempt to authenticate the user
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            // Login successful: Regenerate the session to prevent fixation attacks
-            $request->session()->regenerate();
-
-            // Log successful login
-            Log::info('Login successful for user: ' . Auth::user()->email);
-
-            return redirect()->route('dashboard')->with('success', 'Welcome back, ' . Auth::user()->first_name . '!');
+    
+        // Log the login attempt
+        Log::info('Login attempt for email: ' . $credentials['email']);
+        
+        // Step 2: Find the user by email
+        $user = User::where('email', $credentials['email'])->first();
+    
+        // Step 3: Check if the user exists and if the password matches
+        if (!$user) {
+            Log::warning('No user found with email: ' . $credentials['email']);
+            return back()->withErrors([
+                'email' => 'These credentials do not match our records.',
+            ]);
+        } elseif (!Hash::check($credentials['password'], $user->password)) {
+            Log::warning('Password verification failed for email: ' . $credentials['email']);
+            return back()->withErrors([
+                'email' => 'These credentials do not match our records.',
+            ]);
+        } else {
+            Log::info('Login successful for email: ' . $credentials['email']);
         }
-
-        // Login failed: Log attempt and return with error
-        Log::warning('Login failed for email: ' . $credentials['email']);
-
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->withInput($request->only('email'));
+    
+        // Step 4: Log the user in and regenerate session
+        Auth::login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
+    
+        return redirect()->route('dashboard')->with('success', 'Welcome back, ' . $user->first_name . '!');
     }
+    
 
     /**
      * Log the user out of the application.

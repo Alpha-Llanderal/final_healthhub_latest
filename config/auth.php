@@ -14,8 +14,8 @@ return [
     */
 
     'defaults' => [
-        'guard' => env('AUTH_GUARD', 'web'),
-        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
+        'guard' => env('AUTH_GUARD', 'web'), // Using env variable for flexibility
+        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'), // Using env variable for flexibility
     ],
 
     /*
@@ -91,6 +91,6 @@ return [
     |
     */
 
-    'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
+    'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800), // Using env variable for flexibility
 
 ];

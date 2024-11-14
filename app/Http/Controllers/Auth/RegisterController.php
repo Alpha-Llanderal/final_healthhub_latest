@@ -12,14 +12,20 @@ use Illuminate\Support\Facades\Hash;
 
 class RegisterController extends Controller
 {
+    /**
+     * Show the registration form.
+     */
     public function showRegistrationForm()
     {
         return view('auth.register');
     }
 
+    /**
+     * Handle a registration request for the application.
+     */
     public function register(Request $request)
     {
-        // Validate input
+        // Validate the input
         $validator = $this->validator($request->all());
 
         if ($validator->fails()) {
@@ -28,42 +34,45 @@ class RegisterController extends Controller
                 ->withInput();
         }
 
-        // Begin database transaction
+        // Begin a database transaction
         DB::beginTransaction();
 
         try {
-            // Create user
+            // Create the user and hash the password
             $user = $this->create($request->all());
 
-            // Commit transaction
+            // Commit the transaction
             DB::commit();
 
-            // Log successful registration
+            // Log the successful registration
             Log::info('User registered successfully', [
                 'user_id' => $user->id,
                 'email' => $user->email
             ]);
 
-            // Redirect with success message
+            // Redirect to the login page with a success message
             return redirect()->route('login')
                 ->with('success', 'Registration successful! Please log in.');
         } catch (\Exception $e) {
-            // Rollback transaction on error
+            // Roll back the transaction in case of an error
             DB::rollBack();
 
-            // Log error
+            // Log the error details
             Log::error('Registration failed', [
                 'error' => $e->getMessage(),
                 'input' => $request->except('password', 'password_confirmation')
             ]);
 
-            // Redirect back with error
+            // Redirect back with an error message
             return redirect()->back()
                 ->with('error', 'Registration failed. Please try again.')
                 ->withInput();
         }
     }
 
+    /**
+     * Validate the registration input data.
+     */
     protected function validator(array $data)
     {
         return Validator::make($data, [
@@ -95,6 +104,9 @@ class RegisterController extends Controller
         ]);
     }
 
+    /**
+     * Create a new user instance after a valid registration.
+     */
     protected function create(array $data)
     {
         return User::create([
