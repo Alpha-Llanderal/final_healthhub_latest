@@ -1,13 +1,11 @@
-<?php
-use Illuminate\Support\Facades\Route;
+<?php 
 
-// Controllers
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     UserController,
     DashboardController,
     PrivacyPolicyController
 };
-
 use App\Http\Controllers\Auth\{
     LoginController,
     RegisterController,
@@ -15,72 +13,60 @@ use App\Http\Controllers\Auth\{
     ResetPasswordController
 };
 
+// Public Route for Landing Page
 Route::get('/', function () {
-    return view('landing'); // This will load resources/views/landing.blade.php
+    return view('landing'); // Loads resources/views/landing.blade.php
 })->name('landing');
 
-// Public Routes (No Authentication Required)
-Route::controller(PrivacyPolicyController::class)->group(function () {
-    Route::get('/privacy-policy', [PrivacyPolicyController::class, 'show'])->name('privacy_policy');
+// Privacy Policy Route (Publicly Accessible)
+Route::get('/privacy-policy', [PrivacyPolicyController::class, 'show'])->name('privacy_policy');
 
-});
-
-// Guest Routes (for non-authenticated users only)
+// Guest Routes (Accessible only for non-authenticated users)
 Route::middleware('guest')->group(function () {
-    // Authentication Routes
-    Route::controller(LoginController::class)->group(function () {
-        Route::get('/login', 'showLoginForm')->name('login');
-        Route::post('/login', 'login')->name('login.attempt');
-    });
-    
+    // Login Routes
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login'])->name('login.attempt');
+
     // Registration Routes
-    Route::controller(RegisterController::class)->group(function () {
-        Route::get('/register', 'showRegistrationForm')->name('register');
-        Route::post('/register', 'register');
-    });
-    
+    Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+    Route::post('/register', [RegisterController::class, 'register']);
+
     // Password Reset Routes
     Route::prefix('password')->name('password.')->group(function () {
-        Route::controller(ForgotPasswordController::class)->group(function () {
-            Route::get('/reset', 'showLinkRequestForm')->name('request');
-            Route::post('/email', 'sendResetLinkEmail')->name('email');
-        });
-
-        Route::controller(ResetPasswordController::class)->group(function () {
-            Route::get('/reset/{token}', 'showResetForm')->name('reset');
-            Route::post('/reset', 'reset')->name('update');
-        });
+        Route::get('/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('request');
+        Route::post('/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('email');
+        Route::get('/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('reset');
+        Route::post('/reset', [ResetPasswordController::class, 'reset'])->name('update');
     });
 });
 
-// Protected Routes (Authenticated Users Only)
+// Authenticated Routes (Accessible only for authenticated users)
 Route::middleware('auth')->group(function () {
     // Logout Route
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-    
+
     // Dashboard Route
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
+
     // Profile Routes
     Route::prefix('profile')->name('profile.')->group(function () {
-        Route::controller(UserController::class)->group(function () {
-            // Profile Update
-            Route::post('/update', 'updateProfile')->name('update');
-            Route::post('/upload', 'uploadProfilePicture')->name('upload');
+        Route::get('/', [UserController::class, 'showProfile'])->name('show');  // Show Profile
 
-            // Address Management
-            Route::get('/addresses', 'getAddresses')->name('addresses');
-            Route::post('/address', 'addAddress')->name('address.add');
-            Route::delete('/address/{id}', 'deleteAddress')->name('address.delete');
+        Route::post('/update', [UserController::class, 'updateProfile'])->name('update');
+        Route::post('/upload', [UserController::class, 'uploadProfilePicture'])->name('upload');
+        
+        // Address Management
+        Route::get('/addresses', [UserController::class, 'getAddresses'])->name('addresses');
+        Route::post('/address', [UserController::class, 'addAddress'])->name('address.add');
+        Route::delete('/address/{id}', [UserController::class, 'deleteAddress'])->name('address.delete');
 
-            // Phone Management
-            Route::post('/phone', 'addPhone')->name('phone.add');
-            Route::delete('/phone/{id}', 'deletePhone')->name('phone.delete');
-        });
+        // Phone Management
+        Route::post('/phone', [UserController::class, 'addPhone'])->name('phone.add');
+        Route::delete('/phone/{id}', [UserController::class, 'deletePhone'])->name('phone.delete');
     });
 });
 
-// Optional: API Routes
+// API Routes with Sanctum Authentication (separate from web session-based routes)
 Route::prefix('api')->middleware('auth:sanctum')->group(function () {
-    // Add API-specific routes here
+    // Define API-specific routes here
 });
