@@ -15,10 +15,14 @@ use App\Http\Controllers\Auth\{
     ResetPasswordController
 };
 
+Route::get('/', function () {
+    return view('landing'); // This will load resources/views/landing.blade.php
+})->name('landing');
+
 // Public Routes (No Authentication Required)
 Route::controller(PrivacyPolicyController::class)->group(function () {
-    Route::get('/', 'showLanding')->name('landing');
-    Route::get('/privacy-policy', 'show')->name('privacy_policy');
+    Route::get('/privacy-policy', [PrivacyPolicyController::class, 'showLanding'])->name('privacy_policy');
+
 });
 
 // Guest Routes (for non-authenticated users only)

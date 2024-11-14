@@ -1,56 +1,83 @@
 <?php
+use Illuminate\Support\Facades\Route;
 
-namespace App\Http\Middleware;
+// Controllers
+use App\Http\Controllers\{
+    UserController,
+    DashboardController,
+    PrivacyPolicyController
+};
 
-use Illuminate\Auth\Middleware\Authenticate as Middleware;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Auth\{
+    LoginController,
+    RegisterController,
+    ForgotPasswordController,
+    ResetPasswordController
+};
 
-class Authenticate extends Middleware
-{
-    protected function redirectTo(Request $request): ?string
-    {
-        // Log unauthorized access attempts
-        if (!$request->expectsJson()) {
-            Log::warning('Unauthorized access attempt', [
-                'ip' => $request->ip(),
-                'url' => $request->fullUrl(),
-                'method' => $request->method()
-            ]);
-        }
+// Public Routes (No Authentication Required)
+Route::get('/', function () {
+    return view('landing');
+})->name('landing');
 
-        // Differentiate between API and web routes
-        if ($request->is('api/*')) {
-            // For API routes, return null to send a 401 Unauthorized response
-            return null;
-        }
+Route::get('/privacy-policy', [PrivacyPolicyController::class, 'show'])->name('privacy_policy');
 
-        // For web routes, redirect to login
-        return route('login');
-    }
+// Guest Routes (for non-authenticated users only)
+Route::middleware('guest')->group(function () {
+    // Authentication Routes
+    Route::controller(LoginController::class)->group(function () {
+        Route::get('/login', 'showLoginForm')->name('login');
+        Route::post('/login', 'login')->name('login.attempt');
+    });
+    
+    // Registration Routes
+    Route::controller(RegisterController::class)->group(function () {
+        Route::get('/register', 'showRegistrationForm')->name('register');
+        Route::post('/register', 'register');
+    });
+    
+    // Password Reset Routes
+    Route::prefix('password')->name('password.')->group(function () {
+        Route::controller(ForgotPasswordController::class)->group(function () {
+            Route::get('/reset', 'showLinkRequestForm')->name('request');
+            Route::post('/email', 'sendResetLinkEmail')->name('email');
+        });
 
-    /**
-     * Handle an unauthenticated user.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  array  $guards
-     * @return void
-     *
-     * @throws \Illuminate\Auth\AuthenticationException
-     */
-    protected function unauthenticated($request, array $guards)
-    {
-        // Additional custom handling
-        if ($request->expectsJson()) {
-            // For API requests, return a JSON response
-            return response()->json([
-                'message' => 'Unauthenticated.',
-                'errors' => 'Authentication is required to access this resource.'
-            ], 401);
-        }
+        Route::controller(ResetPasswordController::class)->group(function () {
+            Route::get('/reset/{token}', 'showResetForm')->name('reset');
+            Route::post('/reset', 'reset')->name('update');
+        });
+    });
+});
 
-        // Default Laravel behavior for web routes
-        parent::unauthenticated($request, $guards);
-    }
-}
+// Protected Routes (Authenticated Users Only)
+Route::middleware('auth')->group(function () {
+    // Logout Route
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    
+    // Dashboard Route
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Profile Routes
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::controller(UserController::class)->group(function () {
+            // Profile Update
+            Route::post('/update', 'updateProfile')->name('update');
+            Route::post('/upload', 'uploadProfilePicture')->name('upload');
+
+            // Address Management
+            Route::get('/addresses', 'getAddresses')->name('addresses');
+            Route::post('/address', 'addAddress')->name('address.add');
+            Route::delete('/address/{id}', 'deleteAddress')->name('address.delete');
+
+            // Phone Management
+            Route::post('/phone', 'addPhone')->name('phone.add');
+            Route::delete('/phone/{id}', 'deletePhone')->name('phone.delete');
+        });
+    });
+});
+
+// Optional: API Routes
+Route::prefix('api')->middleware('auth:sanctum')->group(function () {
+    // Add API-specific routes here
+});

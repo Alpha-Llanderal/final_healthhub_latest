@@ -6,6 +6,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class User extends Authenticatable
 {
@@ -38,11 +39,11 @@ class User extends Authenticatable
     protected function password(): Attribute
     {
         return Attribute::make(
-            set: fn ($value) => Hash::make($value)
+            set: fn ($value) => Hash::make($value) // Hashing the password before saving
         );
     }
 
-    // Full Name Accessor using Laravel 9+ Attribute Casting
+    // Full Name Accessor
     protected function fullName(): Attribute
     {
         return Attribute::make(
@@ -75,10 +76,21 @@ class User extends Authenticatable
     // Static Factory Method
     public static function createWithDefaults(array $attributes)
     {
+        // Validate required attributes
+        $validatedData = validator($attributes, [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
+            'birth_date' => 'required|date',
+        ])->validate();
+
+        // Set defaults
         $defaults = [
             'is_self_pay' => false
         ];
 
-        return self::create(array_merge($defaults, $attributes));
+        // Create user
+        return self::create(array_merge($defaults, $validatedData));
     }
 }
