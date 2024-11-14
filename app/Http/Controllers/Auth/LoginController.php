@@ -6,71 +6,63 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
 class LoginController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('guest')->except('logout');  // Add this constructor
-    }
-
+    /**
+     * Show the login form.
+     */
     public function showLoginForm()
     {
-        // Remove the Auth::check() condition here - middleware will handle it
         return view('auth.login');
     }
 
+    /**
+     * Handle a login request to the application.
+     */
     public function login(Request $request)
     {
+        // Step 1: Validate the request data
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'min:8'],
+            'email' => 'required|email',
+            'password' => 'required|min:8',
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
-        
-        Log::info('Login attempt for email: ' . $credentials['email']);
-        
-        if (!$user) {
-            Log::info('Login failed: User not found');
-            return back()->withErrors([
-                'email' => 'No account found with this email address.',
-            ])->withInput($request->only('email', 'remember'));
+        // Step 2: Attempt to authenticate the user
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            // Login successful: Regenerate the session to prevent fixation attacks
+            $request->session()->regenerate();
+
+            // Log successful login
+            Log::info('Login successful for user: ' . Auth::user()->email);
+
+            return redirect()->route('dashboard')->with('success', 'Welcome back, ' . Auth::user()->first_name . '!');
         }
 
-        Log::info('User exists in database: Yes');
-        Log::info('Stored password hash: ' . $user->password);
-        
-        if (!Hash::check($credentials['password'], $user->password)) {
-            Log::info('Login failed: Invalid password');
-            return back()->withErrors([
-                'password' => 'The provided password is incorrect.',
-            ])->withInput($request->only('email', 'remember'));
-        }
+        // Login failed: Log attempt and return with error
+        Log::warning('Login failed for email: ' . $credentials['email']);
 
-        // If we get here, both email and password are correct
-        Auth::login($user, $request->boolean('remember'));
-        Log::info('Login successful for user: ' . $user->email);
-        $request->session()->regenerate();
-
-        return redirect()->route('dashboard')
-            ->with('success', 'Welcome back, ' . $user->first_name . '!');
+        return back()->withErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ])->withInput($request->only('email'));
     }
 
+    /**
+     * Log the user out of the application.
+     */
     public function logout(Request $request)
     {
         $email = Auth::user()->email ?? 'unknown';
+        
         Auth::logout();
+
+        // Invalidate the session and regenerate the CSRF token
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        
+
+        // Log the logout event
         Log::info('User logged out: ' . $email);
 
-        return redirect()->route('login')
-            ->with('success', 'You have been logged out successfully.');
+        return redirect()->route('login')->with('success', 'You have been logged out successfully.');
     }
 }

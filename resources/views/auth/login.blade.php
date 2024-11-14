@@ -34,20 +34,20 @@
                         @endif
 
                         <!-- Login Form -->
-                        <form method="POST" action="{{ route('login') }}" class="needs-validation" novalidate>
+                        <form method="POST" action="{{ route('login.attempt') }}" class="needs-validation" novalidate>
                             @csrf
-                            
+
                             <!-- Email Input -->
                             <div class="form-floating mb-3 position-relative">
                                 <input type="email" 
-                                       id="email"
-                                       class="form-control @error('email') is-invalid @enderror" 
-                                       name="email" 
-                                       value="{{ old('email') }}" 
-                                       placeholder="Enter your email" 
-                                       required 
-                                       autocomplete="email"
-                                       autofocus>
+                                    id="email"
+                                    class="form-control @error('email') is-invalid @enderror" 
+                                    name="email" 
+                                    value="{{ old('email') }}" 
+                                    placeholder="Enter your email" 
+                                    required 
+                                    autocomplete="email"
+                                    autofocus>
                                 <label for="email">Email address</label>
                                 @error('email')
                                     <div class="invalid-feedback">
@@ -59,12 +59,12 @@
                             <!-- Password Input -->
                             <div class="form-floating mb-3 position-relative">
                                 <input type="password" 
-                                       id="password"
-                                       class="form-control @error('password') is-invalid @enderror" 
-                                       name="password" 
-                                       placeholder="Enter your password" 
-                                       required
-                                       autocomplete="current-password">
+                                    id="password"
+                                    class="form-control @error('password') is-invalid @enderror" 
+                                    name="password" 
+                                    placeholder="Enter your password" 
+                                    required
+                                    autocomplete="current-password">
                                 <label for="password">Password</label>
                                 @error('password')
                                     <div class="invalid-feedback">
