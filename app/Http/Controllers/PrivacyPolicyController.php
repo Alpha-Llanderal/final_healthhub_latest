@@ -6,8 +6,10 @@ use Illuminate\Http\Request;
 
 class PrivacyPolicyController extends Controller
 {
-    public function showLanding()
+    public function show()
     {
-        return view('privacy_policy.landing'); // Ensure this view exists
+        // Returns the privacy_policy view
+        return view('privacy_policy');
     }
 }
+

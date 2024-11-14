@@ -21,7 +21,7 @@ Route::get('/', function () {
 
 // Public Routes (No Authentication Required)
 Route::controller(PrivacyPolicyController::class)->group(function () {
-    Route::get('/privacy-policy', [PrivacyPolicyController::class, 'showLanding'])->name('privacy_policy');
+    Route::get('/privacy-policy', [PrivacyPolicyController::class, 'show'])->name('privacy_policy');
 
 });
 
