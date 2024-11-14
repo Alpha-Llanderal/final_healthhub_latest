@@ -42,15 +42,15 @@ Route::middleware('guest')->group(function () {
 
 // Authenticated Routes (Accessible only for authenticated users)
 Route::middleware('auth')->group(function () {
-    // Logout Route
-    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-
     // Dashboard Route
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Logout Route
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
     // Profile Routes
     Route::prefix('profile')->name('profile.')->group(function () {
-        Route::get('/', [UserController::class, 'showProfile'])->name('show');  // Show Profile
+        Route::get('/', [UserController::class, 'showProfile'])->name('show');
 
         Route::post('/update', [UserController::class, 'updateProfile'])->name('update');
         Route::post('/upload', [UserController::class, 'uploadProfilePicture'])->name('upload');
